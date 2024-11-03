@@ -1,0 +1,51 @@
+services:
+  nginx:
+    container_name: ${CONTAINER_NAME}-nginx
+    image: nginx:latest
+    restart: always
+    env_file: .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx-http.rule=Host(`mhd.com`)"
+      - "traefik.http.routers.nginx-http.entrypoints=web"
+      - "traefik.http.services.nginx-http-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.nginx-https.rule=Host(`mhd.com`)"
+      - "traefik.http.routers.nginx-https.entrypoints=websecure"
+      - "traefik.http.routers.nginx-https.tls=true"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./wordpress-data:/var/www/html
+        #- ./nginx/index.php:/var/www/html/index.php
+      - ./nginx/access.log:/var/log/nginx/access.log
+      - ./nginx/error.log:/var/log/nginx/error.log
+
+    networks:
+      - nginx-wp-network
+      - traefik-network
+  wordpress:
+    container_name: ${CONTAINER_NAME}-wordpress
+    image: wordpress:fpm
+    restart: always
+    env_file: .env
+    environment:
+       WORDPRESS_DB_HOST: database:3306
+       WORDPRESS_DB_NAME: ${DATABASE_NAME}
+       WORDPRESS_DB_USER: ${DATABASE_USERNAME}
+       WORDPRESS_DB_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./wordpress-data:/var/www/html
+    networks:
+      - nginx-wp-network
+      - wp-db-network
+volumes:
+  wordpress: {}
+
+networks:
+  nginx-wp-network:
+
+  wp-db-network:
+    external: true
+
+  traefik-network:
+    external: true
+

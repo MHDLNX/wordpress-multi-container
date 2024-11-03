@@ -1,0 +1,15 @@
+services:
+  docusaurus:
+    build:
+      context: .
+    container_name: ${CONTAINER_NAME}-docusaurus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docusaurus.rule=Host(`mhd.com`) && PathPrefix(`/doc`)"
+      - "traefik.http.services.docusaurus.loadbalancer.server.port=80"
+    networks:
+      - traefik-network
+networks:
+  traefik-network:
+    external: true
+
